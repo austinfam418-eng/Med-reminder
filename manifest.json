@@ -1,0 +1,10 @@
+{
+  "name": "Medication Tracker",
+  "short_name": "Med Tracker",
+  "description": "Track medication schedules and reminders.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f2f4f8",
+  "theme_color": "#111111",
+  "orientation": "portrait"
+}
