@@ -1,0 +1,3328 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>MedSchedule</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111827">
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f4f7fb;
+        color: #172033;
+        min-height: 100vh;
+    }
+
+    body.dark {
+        background: #111827;
+        color: #f3f4f6;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+        font: inherit;
+    }
+
+    button {
+        cursor: pointer;
+        border: none;
+    }
+
+    .app {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+        width: 250px;
+        background: white;
+        border-right: 1px solid #e5e7eb;
+        padding: 25px 16px;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 10;
+    }
+
+    .dark .sidebar {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 35px;
+        padding: 0 10px;
+    }
+
+    .logo-icon {
+        width: 42px;
+        height: 42px;
+        background: #4f46e5;
+        color: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+
+    .logo h1 {
+        font-size: 20px;
+    }
+
+    .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nav button {
+        background: transparent;
+        padding: 14px;
+        text-align: left;
+        border-radius: 12px;
+        color: #596579;
+        font-weight: 600;
+    }
+
+    .dark .nav button {
+        color: #cbd5e1;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+
+    /* MAIN */
+    .main {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+        padding: 30px;
+    }
+
+    .page {
+        display: none;
+        max-width: 1400px;
+        margin: auto;
+    }
+
+    .page.active {
+        display: block;
+    }
+
+    .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .topbar h2 {
+        font-size: 30px;
+    }
+
+    .date {
+        color: #687386;
+        margin-top: 5px;
+    }
+
+    .dark .date {
+        color: #9ca3af;
+    }
+
+    /* CARDS */
+    .card {
+        background: white;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+
+    .dark .card {
+        background: #1f2937;
+        box-shadow: none;
+    }
+
+    .card h3 {
+        margin-bottom: 15px;
+    }
+
+    /* NEXT REMINDER */
+    .next-card {
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        color: white;
+        border-radius: 22px;
+        padding: 30px;
+        margin-bottom: 25px;
+    }
+
+    .next-label {
+        opacity: .8;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .next-card h3 {
+        font-size: 30px;
+        margin: 10px 0;
+    }
+
+    .next-time {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    .countdown {
+        font-size: 16px;
+        opacity: .9;
+        margin-bottom: 20px;
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 12px 18px;
+        border-radius: 11px;
+        font-weight: bold;
+    }
+
+    .btn-primary {
+        background: #4f46e5;
+        color: white;
+    }
+
+    .next-card .btn-primary {
+        background: white;
+        color: #4f46e5;
+    }
+
+    .btn-secondary {
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+
+    .btn-danger {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .btn-gray {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .dark .btn-gray {
+        background: #374151;
+        color: white;
+    }
+
+    /* GRID */
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+    }
+
+    .dark .stat {
+        background: #1f2937;
+    }
+
+    .stat-number {
+        font-size: 30px;
+        font-weight: bold;
+        margin-top: 8px;
+    }
+
+    /* TIMELINE */
+    .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .timeline-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        border-radius: 14px;
+        background: #f8fafc;
+    }
+
+    .dark .timeline-item {
+        background: #111827;
+    }
+
+    .timeline-icon {
+        width: 45px;
+        height: 45px;
+        background: #e0e7ff;
+        color: #4f46e5;
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 20px;
+    }
+
+    .timeline-info {
+        flex: 1;
+    }
+
+    .timeline-info strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .small {
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .dark .small {
+        color: #9ca3af;
+    }
+
+    /* STATUS */
+    .status {
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: capitalize;
+    }
+
+    .status.done {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status.missed {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status.snoozed {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status.upcoming {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    /* FORMS */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    input,
+    select,
+    textarea {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 12px;
+        background: white;
+        color: #111827;
+        outline: none;
+    }
+
+    textarea {
+        min-height: 90px;
+        resize: vertical;
+    }
+
+    .dark input,
+    .dark select,
+    .dark textarea {
+        background: #111827;
+        color: white;
+        border-color: #4b5563;
+    }
+
+    /* PEOPLE */
+    .people-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .person-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+    }
+
+    .dark .person-card {
+        background: #1f2937;
+    }
+
+    .avatar {
+        width: 55px;
+        height: 55px;
+        background: #e0e7ff;
+        color: #4f46e5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    /* SETTINGS */
+    .setting-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 17px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .dark .setting-row {
+        border-color: #374151;
+    }
+
+    .switch {
+        width: 48px;
+        height: 26px;
+        background: #cbd5e1;
+        border-radius: 20px;
+        position: relative;
+    }
+
+    .switch::after {
+        content: "";
+        width: 20px;
+        height: 20px;
+        background: white;
+        position: absolute;
+        top: 3px;
+        left: 4px;
+        border-radius: 50%;
+        transition: .2s;
+    }
+
+    .switch.on {
+        background: #4f46e5;
+    }
+
+    .switch.on::after {
+        left: 24px;
+    }
+
+    /* AI PAGE */
+    .ai-header {
+        background: linear-gradient(135deg,#4f46e5,#7c3aed);
+        color: white;
+        padding: 30px;
+        border-radius: 22px;
+        margin-bottom: 20px;
+    }
+
+    .ai-header h2 {
+        font-size: 30px;
+        margin-bottom: 8px;
+    }
+
+    .ai-chat {
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .message {
+        max-width: 80%;
+        padding: 14px 17px;
+        border-radius: 16px;
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+
+    .message.ai {
+        background: #eef2ff;
+        color: #312e81;
+    }
+
+    .dark .message.ai {
+        background: #312e81;
+        color: white;
+    }
+
+    .message.user {
+        background: #4f46e5;
+        color: white;
+        margin-left: auto;
+    }
+
+    .chat-input {
+        display: flex;
+        gap: 10px;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 15px;
+    }
+
+    .chat-input input {
+        flex: 1;
+    }
+
+    /* MODAL */
+    .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        padding: 20px;
+    }
+
+    .modal.show {
+        display: flex;
+    }
+
+    .modal-content {
+        background: white;
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        border-radius: 20px;
+        padding: 25px;
+    }
+
+    .dark .modal-content {
+        background: #1f2937;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .close {
+        background: transparent;
+        font-size: 25px;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6b7280;
+    }
+
+    .toast {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        background: #111827;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 12px;
+        display: none;
+        z-index: 200;
+    }
+
+    .toast.show {
+        display: block;
+    }
+
+    .alert-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(17,24,39,.75);
+        z-index: 150;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .alert-overlay.show {
+        display: flex;
+    }
+
+    .alert-box {
+        background: white;
+        color: #111827;
+        max-width: 500px;
+        width: 100%;
+        border-radius: 25px;
+        padding: 35px;
+        text-align: center;
+    }
+
+    .dark .alert-box {
+        background: #1f2937;
+        color: white;
+    }
+
+    .alert-icon {
+        font-size: 55px;
+        margin-bottom: 15px;
+    }
+
+    .mobile-nav {
+        display: none;
+    }
+
+    @media(max-width: 900px) {
+        .sidebar {
+            display: none;
+        }
+
+        .main {
+            margin-left: 0;
+            width: 100%;
+            padding: 20px 15px 90px;
+        }
+
+        .stats {
+            grid-template-columns: 1fr;
+        }
+
+        .people-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            display: flex;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: white;
+            border-top: 1px solid #ddd;
+            z-index: 50;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .dark .mobile-nav {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        .mobile-nav button {
+            background: none;
+            color: #64748b;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            align-items: center;
+        }
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+<div class="app">
+
+```
+<aside class="sidebar">
+
+    <div class="logo">
+        <div class="logo-icon">💊</div>
+        <h1>MedSchedule</h1>
+    </div>
+
+    <div class="nav">
+        <button class="active" onclick="showPage('home', this)">
+            🏠 Home
+        </button>
+
+        <button onclick="showPage('schedule', this)">
+            📅 Schedule
+        </button>
+
+        <button onclick="showPage('people', this)">
+            👥 People
+        </button>
+
+        <button onclick="showPage('history', this)">
+            📋 History
+        </button>
+
+        <button onclick="showPage('ai', this)">
+            🤖 Dr. Nova
+        </button>
+
+        <button onclick="showPage('settings', this)">
+            ⚙️ Settings
+        </button>
+    </div>
+
+</aside>
+
+
+<main class="main">
+
+    <!-- HOME -->
+    <section id="home" class="page active">
+
+        <div class="topbar">
+
+            <div>
+                <h2>Good day! 👋</h2>
+                <div class="date" id="homeDate"></div>
+            </div>
+
+            <button class="btn btn-primary" onclick="openAddReminder()">
+                + Add Reminder
+            </button>
+
+        </div>
+
+        <div id="nextReminderContainer"></div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <div class="small">Completed Today</div>
+                <div class="stat-number" id="completedStat">0</div>
+            </div>
+
+            <div class="stat">
+                <div class="small">Remaining Today</div>
+                <div class="stat-number" id="remainingStat">0</div>
+            </div>
+
+            <div class="stat">
+                <div class="small">Missed Today</div>
+                <div class="stat-number" id="missedStat">0</div>
+            </div>
+
+        </div>
+
+        <div class="card">
+            <h3>Today's Schedule</h3>
+            <div id="todayTimeline" class="timeline"></div>
+        </div>
+
+    </section>
+
+
+    <!-- SCHEDULE -->
+    <section id="schedule" class="page">
+
+        <div class="topbar">
+
+            <div>
+                <h2>Schedule</h2>
+                <div class="date">
+                    Manage your reminders
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="openAddReminder()">
+                + Add Reminder
+            </button>
+
+        </div>
+
+        <div class="card">
+
+            <label>Filter by person</label>
+
+            <select id="schedulePersonFilter" onchange="renderSchedule()">
+            </select>
+
+        </div>
+
+        <div id="scheduleList"></div>
+
+    </section>
+
+
+    <!-- PEOPLE -->
+    <section id="people" class="page">
+
+        <div class="topbar">
+
+            <div>
+                <h2>People</h2>
+                <div class="date">
+                    Manage schedules for yourself and others
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="openAddPerson()">
+                + Add Person
+            </button>
+
+        </div>
+
+        <div id="peopleList" class="people-grid"></div>
+
+    </section>
+
+
+    <!-- HISTORY -->
+    <section id="history" class="page">
+
+        <div class="topbar">
+
+            <div>
+                <h2>History</h2>
+                <div class="date">
+                    Reminder activity
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <select id="historyFilter" onchange="renderHistory()">
+
+                <option value="all">
+                    All
+                </option>
+
+                <option value="done">
+                    Completed
+                </option>
+
+                <option value="missed">
+                    Missed
+                </option>
+
+                <option value="snoozed">
+                    Snoozed
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="card">
+
+            <div id="historyList" class="timeline"></div>
+
+        </div>
+
+    </section>
+
+
+    <!-- AI -->
+    <section id="ai" class="page">
+
+        <div class="ai-header">
+
+            <h2>🤖 Dr. Nova</h2>
+
+            <p>
+                Your general health information assistant.
+            </p>
+
+        </div>
+
+        <div class="card ai-chat">
+
+            <div id="chatMessages" class="chat-messages">
+
+                <div class="message ai">
+
+                    👋 Hi! I'm <strong>Dr. Nova</strong>.
+
+                    <br><br>
+
+                    I can help explain general health topics,
+                    help you prepare questions for a doctor,
+                    explain common medical terms, and help
+                    you organize information you've entered
+                    into MedSchedule.
+
+                    <br><br>
+
+                    I can't diagnose you, prescribe medicine,
+                    or tell you to change a medication dose.
+
+                    <br><br>
+
+                    What would you like help understanding?
+
+                </div>
+
+            </div>
+
+            <div class="chat-input">
+
+                <input
+                    id="aiInput"
+                    type="text"
+                    placeholder="Ask Dr. Nova something..."
+                    onkeydown="handleAIKey(event)"
+                >
+
+                <button
+                    class="btn btn-primary"
+                    onclick="askNova()"
+                >
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- SETTINGS -->
+    <section id="settings" class="page">
+
+        <div class="topbar">
+
+            <div>
+                <h2>Settings</h2>
+
+                <div class="date">
+                    Customize MedSchedule
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Notifications</h3>
+
+            <div class="setting-row">
+
+                <div>
+                    <strong>Notifications</strong>
+
+                    <div class="small">
+                        Show reminder notifications
+                    </div>
+                </div>
+
+                <div
+                    id="notificationSwitch"
+                    class="switch on"
+                    onclick="toggleSetting('notifications')">
+                </div>
+
+            </div>
+
+
+            <div class="setting-row">
+
+                <div>
+                    <strong>Sound Alerts</strong>
+
+                    <div class="small">
+                        Play a sound when reminders are due
+                    </div>
+                </div>
+
+                <div
+                    id="soundSwitch"
+                    class="switch on"
+                    onclick="toggleSetting('sound')">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Appearance</h3>
+
+            <div class="setting-row">
+
+                <div>
+                    <strong>Dark Mode</strong>
+
+                    <div class="small">
+                        Use a darker interface
+                    </div>
+                </div>
+
+                <div
+                    id="darkSwitch"
+                    class="switch"
+                    onclick="toggleSetting('dark')">
+                </div>
+
+            </div>
+
+
+            <div class="setting-row">
+
+                <div>
+                    <strong>Large Text</strong>
+
+                    <div class="small">
+                        Increase text size
+                    </div>
+                </div>
+
+                <div
+                    id="largeTextSwitch"
+                    class="switch"
+                    onclick="toggleSetting('largeText')">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>AI Assistant</h3>
+
+            <div class="setting-row">
+
+                <div>
+                    <strong>Assistant Name</strong>
+
+                    <div class="small">
+                        Your health information assistant
+                    </div>
+                </div>
+
+                <strong>Dr. Nova</strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Important Information</h3>
+
+            <p class="small">
+
+                Dr. Nova provides general educational
+                information only. It does not diagnose
+                conditions, prescribe medication, determine
+                doses, or replace a qualified healthcare
+                professional.
+
+                <br><br>
+
+                If you are experiencing a serious or
+                emergency situation, contact a trusted adult
+                or appropriate emergency services.
+
+            </p>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav">
+
+    <button onclick="showPage('home', this)">
+        🏠
+        <span>Home</span>
+    </button>
+
+    <button onclick="showPage('schedule', this)">
+        📅
+        <span>Schedule</span>
+    </button>
+
+    <button onclick="showPage('people', this)">
+        👥
+        <span>People</span>
+    </button>
+
+    <button onclick="showPage('ai', this)">
+        🤖
+        <span>AI</span>
+    </button>
+
+    <button onclick="showPage('settings', this)">
+        ⚙️
+        <span>Settings</span>
+    </button>
+
+</div>
+```
+
+</div>
+
+<!-- ADD REMINDER -->
+
+<div id="reminderModal" class="modal">
+
+```
+<div class="modal-content">
+
+    <div class="modal-header">
+
+        <h2 id="reminderModalTitle">
+            Add Reminder
+        </h2>
+
+        <button
+            class="close"
+            onclick="closeModal('reminderModal')">
+            ×
+        </button>
+
+    </div>
+
+
+    <form id="reminderForm">
+
+        <input
+            type="hidden"
+            id="editingReminderId"
+        >
+
+        <div class="form-grid">
+
+            <div class="form-group">
+
+                <label>Type</label>
+
+                <select id="reminderType">
+
+                    <option value="Medication">
+                        💊 Medication
+                    </option>
+
+                    <option value="Appointment">
+                        📅 Appointment
+                    </option>
+
+                    <option value="Task">
+                        ✅ Task
+                    </option>
+
+                    <option value="Exercise">
+                        🏃 Exercise
+                    </option>
+
+                    <option value="Meal">
+                        🍎 Meal
+                    </option>
+
+                    <option value="Custom">
+                        🔔 Custom
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>For Person</label>
+
+                <select id="reminderPerson"></select>
+
+            </div>
+
+
+            <div class="form-group full">
+
+                <label>Name</label>
+
+                <input
+                    id="reminderName"
+                    type="text"
+                    placeholder="Example: Morning reminder"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Time</label>
+
+                <input
+                    id="reminderTime"
+                    type="time"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Days</label>
+
+                <select id="reminderDays">
+
+                    <option value="everyday">
+                        Every day
+                    </option>
+
+                    <option value="weekdays">
+                        Weekdays
+                    </option>
+
+                    <option value="weekends">
+                        Weekends
+                    </option>
+
+                    <option value="once">
+                        Today only
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Start Date</label>
+
+                <input
+                    id="reminderStart"
+                    type="date"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>End Date</label>
+
+                <input
+                    id="reminderEnd"
+                    type="date"
+                >
+
+            </div>
+
+
+            <div class="form-group full">
+
+                <label>Instructions / Notes</label>
+
+                <textarea
+                    id="reminderNotes"
+                    placeholder="Add information you want to remember..."
+                ></textarea>
+
+            </div>
+
+        </div>
+
+        <br>
+
+        <div class="actions">
+
+            <button
+                type="submit"
+                class="btn btn-primary">
+                Save Reminder
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-gray"
+                onclick="closeModal('reminderModal')">
+                Cancel
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+```
+
+</div>
+
+<!-- PERSON -->
+
+<div id="personModal" class="modal">
+
+```
+<div class="modal-content">
+
+    <div class="modal-header">
+
+        <h2>Add Person</h2>
+
+        <button
+            class="close"
+            onclick="closeModal('personModal')">
+            ×
+        </button>
+
+    </div>
+
+
+    <form id="personForm">
+
+        <div class="form-group">
+
+            <label>Name</label>
+
+            <input
+                id="personName"
+                type="text"
+                placeholder="Person's name"
+                required
+            >
+
+        </div>
+
+        <br>
+
+        <div class="form-group">
+
+            <label>Relationship</label>
+
+            <input
+                id="personRelationship"
+                type="text"
+                placeholder="Example: Family member"
+            >
+
+        </div>
+
+        <br>
+
+        <div class="actions">
+
+            <button
+                type="submit"
+                class="btn btn-primary">
+                Add Person
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-gray"
+                onclick="closeModal('personModal')">
+                Cancel
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+```
+
+</div>
+
+<!-- ALERT -->
+
+<div id="alertOverlay" class="alert-overlay">
+
+```
+<div class="alert-box">
+
+    <div class="alert-icon">
+        🔔
+    </div>
+
+    <h2 id="alertTitle">
+        Reminder
+    </h2>
+
+    <div
+        id="alertTime"
+        style="font-size:22px;font-weight:bold;margin:15px">
+    </div>
+
+    <p
+        id="alertNotes"
+        class="small">
+    </p>
+
+    <br>
+
+    <div
+        class="actions"
+        style="justify-content:center">
+
+        <button
+            class="btn btn-primary"
+            onclick="completeAlert()">
+            ✓ Done
+        </button>
+
+        <button
+            class="btn btn-secondary"
+            onclick="snoozeAlert()">
+            😴 Snooze
+        </button>
+
+        <button
+            class="btn btn-gray"
+            onclick="closeAlert()">
+            Close
+        </button>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+
+/* =====================================================
+   MEDSCHEDULE DATA
+===================================================== */
+
+let reminders = JSON.parse(
+    localStorage.getItem("medschedule_reminders") || "[]"
+);
+
+let people = JSON.parse(
+    localStorage.getItem("medschedule_people") || "[]"
+);
+
+let history = JSON.parse(
+    localStorage.getItem("medschedule_history") || "[]"
+);
+
+let settings = JSON.parse(
+    localStorage.getItem("medschedule_settings") ||
+    `{
+        "notifications": true,
+        "sound": true,
+        "dark": false,
+        "largeText": false,
+        "snooze": 10
+    }`
+);
+
+let currentAlertReminder = null;
+
+
+/* SAVE */
+
+function saveAll() {
+
+    localStorage.setItem(
+        "medschedule_reminders",
+        JSON.stringify(reminders)
+    );
+
+    localStorage.setItem(
+        "medschedule_people",
+        JSON.stringify(people)
+    );
+
+    localStorage.setItem(
+        "medschedule_history",
+        JSON.stringify(history)
+    );
+
+    localStorage.setItem(
+        "medschedule_settings",
+        JSON.stringify(settings)
+    );
+}
+
+
+/* ID */
+
+function makeId() {
+
+    return Date.now().toString() +
+        Math.random().toString(36)
+        .substring(2);
+}
+
+
+/* DATE */
+
+function todayString() {
+
+    return new Date()
+        .toISOString()
+        .split("T")[0];
+}
+
+
+/* FORMAT DATE */
+
+function formatDate(dateString) {
+
+    const date =
+        new Date(dateString + "T00:00:00");
+
+    return date.toLocaleDateString(
+        undefined,
+        {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+        }
+    );
+}
+
+
+/* ESCAPE */
+
+function escapeHtml(value) {
+
+    return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+/* NAVIGATION */
+
+function showPage(pageId, button) {
+
+    document
+        .querySelectorAll(".page")
+        .forEach(page =>
+            page.classList.remove("active")
+        );
+
+    document
+        .getElementById(pageId)
+        .classList.add("active");
+
+    document
+        .querySelectorAll(".nav button,.mobile-nav button")
+        .forEach(btn =>
+            btn.classList.remove("active")
+        );
+
+    if (button) {
+        button.classList.add("active");
+    }
+
+    if (pageId === "home")
+        renderHome();
+
+    if (pageId === "schedule")
+        renderSchedule();
+
+    if (pageId === "people")
+        renderPeople();
+
+    if (pageId === "history")
+        renderHistory();
+}
+
+
+/* DEFAULT PERSON */
+
+function ensureDefaultPerson() {
+
+    if (!people.length) {
+
+        people.push({
+            id: makeId(),
+            name: "Me",
+            relationship: "My schedule"
+        });
+
+        saveAll();
+    }
+}
+
+
+/* PEOPLE SELECTS */
+
+function populatePeopleSelects() {
+
+    const select =
+        document.getElementById("reminderPerson");
+
+    const filter =
+        document.getElementById("schedulePersonFilter");
+
+    select.innerHTML = "";
+
+    filter.innerHTML =
+        `<option value="all">Everyone</option>`;
+
+    people.forEach(person => {
+
+        select.innerHTML += `
+            <option value="${person.id}">
+                ${escapeHtml(person.name)}
+            </option>
+        `;
+
+        filter.innerHTML += `
+            <option value="${person.id}">
+                ${escapeHtml(person.name)}
+            </option>
+        `;
+    });
+}
+
+
+/* OPEN REMINDER */
+
+function openAddReminder() {
+
+    populatePeopleSelects();
+
+    document
+        .getElementById("reminderForm")
+        .reset();
+
+    document
+        .getElementById("editingReminderId")
+        .value = "";
+
+    document
+        .getElementById("reminderModalTitle")
+        .textContent = "Add Reminder";
+
+    document
+        .getElementById("reminderStart")
+        .value = todayString();
+
+    document
+        .getElementById("reminderPerson")
+        .value = people[0].id;
+
+    document
+        .getElementById("reminderModal")
+        .classList.add("show");
+}
+
+
+/* EDIT */
+
+function editReminder(id) {
+
+    const r =
+        reminders.find(
+            reminder => reminder.id === id
+        );
+
+    if (!r) return;
+
+    populatePeopleSelects();
+
+    document.getElementById(
+        "editingReminderId"
+    ).value = r.id;
+
+    document.getElementById(
+        "reminderType"
+    ).value = r.type;
+
+    document.getElementById(
+        "reminderPerson"
+    ).value = r.personId;
+
+    document.getElementById(
+        "reminderName"
+    ).value = r.name;
+
+    document.getElementById(
+        "reminderTime"
+    ).value = r.time;
+
+    document.getElementById(
+        "reminderDays"
+    ).value = r.days;
+
+    document.getElementById(
+        "reminderStart"
+    ).value = r.startDate || "";
+
+    document.getElementById(
+        "reminderEnd"
+    ).value = r.endDate || "";
+
+    document.getElementById(
+        "reminderNotes"
+    ).value = r.notes || "";
+
+    document.getElementById(
+        "reminderModalTitle"
+    ).textContent = "Edit Reminder";
+
+    document.getElementById(
+        "reminderModal"
+    ).classList.add("show");
+}
+
+
+/* CLOSE */
+
+function closeModal(id) {
+
+    document
+        .getElementById(id)
+        .classList.remove("show");
+}
+
+
+/* SAVE REMINDER */
+
+document
+    .getElementById("reminderForm")
+    .addEventListener(
+        "submit",
+        function(event) {
+
+            event.preventDefault();
+
+            const id =
+                document.getElementById(
+                    "editingReminderId"
+                ).value;
+
+            const data = {
+
+                id: id || makeId(),
+
+                type:
+                    document.getElementById(
+                        "reminderType"
+                    ).value,
+
+                personId:
+                    document.getElementById(
+                        "reminderPerson"
+                    ).value,
+
+                name:
+                    document.getElementById(
+                        "reminderName"
+                    ).value.trim(),
+
+                time:
+                    document.getElementById(
+                        "reminderTime"
+                    ).value,
+
+                days:
+                    document.getElementById(
+                        "reminderDays"
+                    ).value,
+
+                startDate:
+                    document.getElementById(
+                        "reminderStart"
+                    ).value,
+
+                endDate:
+                    document.getElementById(
+                        "reminderEnd"
+                    ).value,
+
+                notes:
+                    document.getElementById(
+                        "reminderNotes"
+                    ).value.trim()
+            };
+
+
+            if (!data.name) {
+
+                showToast(
+                    "Please enter a reminder name."
+                );
+
+                return;
+            }
+
+
+            if (id) {
+
+                const index =
+                    reminders.findIndex(
+                        r => r.id === id
+                    );
+
+                if (index !== -1) {
+
+                    reminders[index] = {
+                        ...reminders[index],
+                        ...data
+                    };
+                }
+
+                showToast(
+                    "Reminder updated!"
+                );
+
+            } else {
+
+                reminders.push({
+
+                    ...data,
+
+                    paused: false,
+
+                    snoozedUntil: null,
+
+                    createdAt:
+                        new Date().toISOString()
+                });
+
+                showToast(
+                    "Reminder created!"
+                );
+            }
+
+
+            saveAll();
+
+            closeModal(
+                "reminderModal"
+            );
+
+            renderAll();
+        }
+    );
+
+
+/* DELETE */
+
+function deleteReminder(id) {
+
+    const r =
+        reminders.find(
+            reminder => reminder.id === id
+        );
+
+    if (!r) return;
+
+    if (!confirm(
+        `Delete "${r.name}"?`
+    )) return;
+
+    reminders =
+        reminders.filter(
+            reminder => reminder.id !== id
+        );
+
+    saveAll();
+
+    renderAll();
+
+    showToast(
+        "Reminder deleted."
+    );
+}
+
+
+/* ADD PERSON */
+
+function openAddPerson() {
+
+    document
+        .getElementById("personForm")
+        .reset();
+
+    document
+        .getElementById("personModal")
+        .classList.add("show");
+}
+
+
+document
+    .getElementById("personForm")
+    .addEventListener(
+        "submit",
+        function(event) {
+
+            event.preventDefault();
+
+            const name =
+                document.getElementById(
+                    "personName"
+                ).value.trim();
+
+            const relationship =
+                document.getElementById(
+                    "personRelationship"
+                ).value.trim();
+
+            if (!name) return;
+
+            people.push({
+
+                id: makeId(),
+
+                name: name,
+
+                relationship:
+                    relationship || "Person"
+            });
+
+            saveAll();
+
+            closeModal(
+                "personModal"
+            );
+
+            renderAll();
+
+            showToast(
+                "Person added!"
+            );
+        }
+    );
+
+
+/* DELETE PERSON */
+
+function deletePerson(id) {
+
+    const person =
+        people.find(
+            p => p.id === id
+        );
+
+    if (!person) return;
+
+    const linked =
+        reminders.filter(
+            r => r.personId === id
+        );
+
+    if (linked.length) {
+
+        alert(
+            "This person still has reminders. Move or delete those reminders first."
+        );
+
+        return;
+    }
+
+    if (!confirm(
+        `Remove ${person.name}?`
+    )) return;
+
+    people =
+        people.filter(
+            p => p.id !== id
+        );
+
+    saveAll();
+
+    renderAll();
+}
+
+
+/* PERSON NAME */
+
+function getPersonName(id) {
+
+    const person =
+        people.find(
+            p => p.id === id
+        );
+
+    return person
+        ? person.name
+        : "Unknown";
+}
+
+
+/* ICON */
+
+function getIcon(type) {
+
+    return {
+
+        Medication: "💊",
+
+        Appointment: "📅",
+
+        Task: "✅",
+
+        Exercise: "🏃",
+
+        Meal: "🍎",
+
+        Custom: "🔔"
+
+    }[type] || "🔔";
+}
+
+
+/* TODAY */
+
+function reminderAppliesToday(r) {
+
+    const date =
+        todayString();
+
+    if (
+        r.startDate &&
+        date < r.startDate
+    ) return false;
+
+    if (
+        r.endDate &&
+        date > r.endDate
+    ) return false;
+
+    const day =
+        new Date().getDay();
+
+    if (r.days === "everyday")
+        return true;
+
+    if (r.days === "weekdays")
+        return day >= 1 && day <= 5;
+
+    if (r.days === "weekends")
+        return day === 0 || day === 6;
+
+    if (r.days === "once")
+        return r.startDate === date;
+
+    return true;
+}
+
+
+/* STATUS */
+
+function getTodayStatus(id) {
+
+    const entries =
+        history.filter(
+            h =>
+                h.reminderId === id &&
+                h.date === todayString()
+        );
+
+    if (!entries.length)
+        return "upcoming";
+
+    return entries[
+        entries.length - 1
+    ].status;
+}
+
+
+/* SORT */
+
+function sortReminders(list) {
+
+    return [...list].sort(
+        (a, b) =>
+            a.time.localeCompare(b.time)
+    );
+}
+
+
+/* HOME */
+
+function renderHome() {
+
+    document.getElementById(
+        "homeDate"
+    ).textContent =
+        formatDate(todayString());
+
+    const list =
+        sortReminders(
+            reminders.filter(
+                r =>
+                    reminderAppliesToday(r) &&
+                    !r.paused
+            )
+        );
+
+    let completed = 0;
+    let missed = 0;
+
+    list.forEach(r => {
+
+        const status =
+            getTodayStatus(r.id);
+
+        if (status === "done")
+            completed++;
+
+        if (status === "missed")
+            missed++;
+    });
+
+    document.getElementById(
+        "completedStat"
+    ).textContent = completed;
+
+    document.getElementById(
+        "remainingStat"
+    ).textContent =
+        Math.max(
+            list.length - completed,
+            0
+        );
+
+    document.getElementById(
+        "missedStat"
+    ).textContent = missed;
+
+    renderNext(list);
+
+    const timeline =
+        document.getElementById(
+            "todayTimeline"
+        );
+
+    if (!list.length) {
+
+        timeline.innerHTML = `
+
+            <div class="empty">
+
+                <h3>
+                    No reminders today
+                </h3>
+
+                <p>
+                    Add your first reminder.
+                </p>
+
+                <br>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="openAddReminder()">
+                    + Add Reminder
+                </button>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+    timeline.innerHTML =
+        list.map(
+            r => reminderHTML(r)
+        ).join("");
+}
+
+
+/* NEXT */
+
+function renderNext(list) {
+
+    const container =
+        document.getElementById(
+            "nextReminderContainer"
+        );
+
+    if (!list.length) {
+
+        container.innerHTML = `
+
+            <div class="next-card">
+
+                <div class="next-label">
+                    You're all set!
+                </div>
+
+                <h3>
+                    No reminders scheduled
+                </h3>
+
+                <div class="next-time">
+                    Add a reminder to begin.
+                </div>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+    const now =
+        new Date();
+
+    const future =
+        list.filter(r => {
+
+            const [h, m] =
+                r.time
+                    .split(":")
+                    .map(Number);
+
+            const d =
+                new Date();
+
+            d.setHours(h, m, 0, 0);
+
+            return d >= now &&
+                getTodayStatus(r.id)
+                !== "done";
+        });
+
+    const next =
+        future[0] ||
+        list.find(
+            r =>
+                getTodayStatus(r.id)
+                !== "done"
+        );
+
+    if (!next) {
+
+        container.innerHTML = `
+
+            <div class="next-card">
+
+                <div class="next-label">
+                    Today
+                </div>
+
+                <h3>
+                    All reminders completed 🎉
+                </h3>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+    container.innerHTML = `
+
+        <div class="next-card">
+
+            <div class="next-label">
+                Next Reminder
+            </div>
+
+            <h3>
+                ${getIcon(next.type)}
+                ${escapeHtml(next.name)}
+            </h3>
+
+            <div class="next-time">
+
+                ${formatTime(next.time)}
+
+                ·
+
+                ${escapeHtml(
+                    getPersonName(next.personId)
+                )}
+
+            </div>
+
+            <div
+                class="countdown"
+                id="nextCountdown">
+                Calculating...
+            </div>
+
+            <div class="actions">
+
+                <button
+                    class="btn btn-primary"
+                    onclick="completeReminder('${next.id}')">
+                    ✓ Done
+                </button>
+
+                <button
+                    class="btn btn-secondary"
+                    onclick="snoozeReminder('${next.id}')">
+                    😴 Snooze
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+
+    updateCountdown(next);
+}
+
+
+/* COUNTDOWN */
+
+function updateCountdown(r) {
+
+    const element =
+        document.getElementById(
+            "nextCountdown"
+        );
+
+    if (!element) return;
+
+    const [h, m] =
+        r.time
+            .split(":")
+            .map(Number);
+
+    const target =
+        new Date();
+
+    target.setHours(
+        h,
+        m,
+        0,
+        0
+    );
+
+    let diff =
+        target - new Date();
+
+    if (diff < 0)
+        diff = 0;
+
+    const minutes =
+        Math.floor(
+            diff / 60000
+        );
+
+    const hours =
+        Math.floor(
+            minutes / 60
+        );
+
+    const mins =
+        minutes % 60;
+
+    element.textContent =
+        hours > 0
+        ? `In ${hours}h ${mins}m`
+        : `In ${mins} minutes`;
+}
+
+
+/* REMINDER HTML */
+
+function reminderHTML(r) {
+
+    const status =
+        getTodayStatus(r.id);
+
+    return `
+
+        <div class="timeline-item">
+
+            <div class="timeline-icon">
+                ${getIcon(r.type)}
+            </div>
+
+            <div class="timeline-info">
+
+                <strong>
+                    ${escapeHtml(r.name)}
+                </strong>
+
+                <div class="small">
+
+                    ${formatTime(r.time)}
+
+                    ·
+
+                    ${escapeHtml(
+                        getPersonName(r.personId)
+                    )}
+
+                </div>
+
+            </div>
+
+            <span class="status ${status}">
+                ${status}
+            </span>
+
+            <button
+                class="btn btn-gray"
+                onclick="editReminder('${r.id}')">
+                ✏️
+            </button>
+
+        </div>
+
+    `;
+}
+
+
+/* TIME */
+
+function formatTime(time) {
+
+    const [h, m] =
+        time.split(":");
+
+    const d =
+        new Date();
+
+    d.setHours(
+        Number(h),
+        Number(m),
+        0,
+        0
+    );
+
+    return d.toLocaleTimeString(
+        [],
+        {
+            hour: "numeric",
+            minute: "2-digit"
+        }
+    );
+}
+
+
+/* SCHEDULE */
+
+function renderSchedule() {
+
+    populatePeopleSelects();
+
+    const filter =
+        document.getElementById(
+            "schedulePersonFilter"
+        ).value;
+
+    let list =
+        reminders.filter(
+            r =>
+                filter === "all" ||
+                r.personId === filter
+        );
+
+    list =
+        sortReminders(list);
+
+    const container =
+        document.getElementById(
+            "scheduleList"
+        );
+
+    if (!list.length) {
+
+        container.innerHTML = `
+
+            <div class="card empty">
+
+                <h3>
+                    No reminders found
+                </h3>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="openAddReminder()">
+                    + Add Reminder
+                </button>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        list.map(r => `
+
+            <div class="card">
+
+                <h3>
+
+                    ${getIcon(r.type)}
+
+                    ${escapeHtml(r.name)}
+
+                </h3>
+
+                <div class="small">
+
+                    ${formatTime(r.time)}
+
+                    ·
+
+                    ${escapeHtml(
+                        getPersonName(r.personId)
+                    )}
+
+                    ·
+
+                    ${escapeHtml(r.days)}
+
+                </div>
+
+                <br>
+
+                <div class="actions">
+
+                    <button
+                        class="btn btn-gray"
+                        onclick="editReminder('${r.id}')">
+                        ✏️ Edit
+                    </button>
+
+                    <button
+                        class="btn btn-danger"
+                        onclick="deleteReminder('${r.id}')">
+                        Delete
+                    </button>
+
+                </div>
+
+            </div>
+
+        `).join("");
+}
+
+
+/* PEOPLE */
+
+function renderPeople() {
+
+    const container =
+        document.getElementById(
+            "peopleList"
+        );
+
+    container.innerHTML =
+        people.map(p => {
+
+            const count =
+                reminders.filter(
+                    r => r.personId === p.id
+                ).length;
+
+            return `
+
+                <div class="person-card">
+
+                    <div class="avatar">
+                        👤
+                    </div>
+
+                    <h3>
+                        ${escapeHtml(p.name)}
+                    </h3>
+
+                    <div class="small">
+                        ${escapeHtml(
+                            p.relationship
+                        )}
+                    </div>
+
+                    <br>
+
+                    <div class="small">
+                        ${count} reminder(s)
+                    </div>
+
+                    <br>
+
+                    ${
+                        p.name !== "Me"
+                        ?
+                        `<button
+                            class="btn btn-danger"
+                            onclick="deletePerson('${p.id}')">
+                            Delete
+                        </button>`
+                        :
+                        ""
+                    }
+
+                </div>
+
+            `;
+
+        }).join("");
+}
+
+
+/* HISTORY */
+
+function renderHistory() {
+
+    const filter =
+        document.getElementById(
+            "historyFilter"
+        ).value;
+
+    let list =
+        history.filter(
+            h =>
+                filter === "all" ||
+                h.status === filter
+        );
+
+    list =
+        [...list].reverse();
+
+    const container =
+        document.getElementById(
+            "historyList"
+        );
+
+    if (!list.length) {
+
+        container.innerHTML = `
+
+            <div class="empty">
+
+                <h3>
+                    No history yet
+                </h3>
+
+                <p>
+                    Reminder activity will appear here.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        list.map(h => `
+
+            <div class="timeline-item">
+
+                <div class="timeline-icon">
+                    ${getIcon(h.type)}
+                </div>
+
+                <div class="timeline-info">
+
+                    <strong>
+                        ${escapeHtml(h.name)}
+                    </strong>
+
+                    <div class="small">
+
+                        ${escapeHtml(h.date)}
+
+                        ·
+
+                        ${escapeHtml(h.time)}
+
+                        ·
+
+                        ${escapeHtml(h.person)}
+
+                    </div>
+
+                </div>
+
+                <span class="status ${h.status}">
+                    ${h.status}
+                </span>
+
+            </div>
+
+        `).join("");
+}
+
+
+/* COMPLETE */
+
+function completeReminder(id) {
+
+    const r =
+        reminders.find(
+            x => x.id === id
+        );
+
+    if (!r) return;
+
+    history.push({
+
+        id: makeId(),
+
+        reminderId: r.id,
+
+        name: r.name,
+
+        type: r.type,
+
+        person: getPersonName(
+            r.personId
+        ),
+
+        date: todayString(),
+
+        time: formatTime(r.time),
+
+        status: "done"
+    });
+
+    saveAll();
+
+    renderAll();
+
+    showToast(
+        "Marked as completed."
+    );
+}
+
+
+/* SNOOZE */
+
+function snoozeReminder(id) {
+
+    const r =
+        reminders.find(
+            x => x.id === id
+        );
+
+    if (!r) return;
+
+    history.push({
+
+        id: makeId(),
+
+        reminderId: r.id,
+
+        name: r.name,
+
+        type: r.type,
+
+        person: getPersonName(
+            r.personId
+        ),
+
+        date: todayString(),
+
+        time: new Date()
+            .toLocaleTimeString(),
+
+        status: "snoozed"
+    });
+
+    saveAll();
+
+    renderAll();
+
+    showToast(
+        `Snoozed for ${settings.snooze} minutes.`
+    );
+}
+
+
+/* ALERT */
+
+function showReminderAlert(r) {
+
+    currentAlertReminder = r;
+
+    document.getElementById(
+        "alertTitle"
+    ).textContent = r.name;
+
+    document.getElementById(
+        "alertTime"
+    ).textContent =
+        formatTime(r.time);
+
+    document.getElementById(
+        "alertNotes"
+    ).textContent =
+        r.notes ||
+        "Your scheduled reminder is due.";
+
+    document.getElementById(
+        "alertOverlay"
+    ).classList.add("show");
+
+    if (settings.sound)
+        playAlertSound();
+}
+
+
+function playAlertSound() {
+
+    try {
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContext)
+            return;
+
+        const context =
+            new AudioContext();
+
+        const oscillator =
+            context.createOscillator();
+
+        const gain =
+            context.createGain();
+
+        oscillator.frequency.value =
+            880;
+
+        oscillator.connect(gain);
+
+        gain.connect(
+            context.destination
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            context.currentTime + .5
+        );
+
+    } catch(e) {
+
+        console.log(e);
+
+    }
+}
+
+
+function completeAlert() {
+
+    if (currentAlertReminder) {
+
+        completeReminder(
+            currentAlertReminder.id
+        );
+
+    }
+
+    closeAlert();
+}
+
+
+function snoozeAlert() {
+
+    if (currentAlertReminder) {
+
+        snoozeReminder(
+            currentAlertReminder.id
+        );
+
+    }
+
+    closeAlert();
+}
+
+
+function closeAlert() {
+
+    document.getElementById(
+        "alertOverlay"
+    ).classList.remove("show");
+
+    currentAlertReminder = null;
+}
+
+
+/* CHECK REMINDERS */
+
+function checkReminders() {
+
+    if (!settings.notifications)
+        return;
+
+    const current =
+        new Date()
+        .toTimeString()
+        .slice(0,5);
+
+    reminders.forEach(r => {
+
+        if (r.paused)
+            return;
+
+        if (!reminderAppliesToday(r))
+            return;
+
+        if (r.time !== current)
+            return;
+
+        const key =
+            "alert_" +
+            r.id +
+            "_" +
+            todayString();
+
+        if (
+            localStorage.getItem(key)
+        )
+            return;
+
+        localStorage.setItem(
+            key,
+            "1"
+        );
+
+        showReminderAlert(r);
+
+    });
+}
+
+
+/* SETTINGS */
+
+function toggleSetting(setting) {
+
+    settings[setting] =
+        !settings[setting];
+
+    saveAll();
+
+    applySettings();
+}
+
+
+function applySettings() {
+
+    document.body.classList.toggle(
+        "dark",
+        settings.dark
+    );
+
+    document.body.style.fontSize =
+        settings.largeText
+        ? "18px"
+        : "16px";
+
+    document.getElementById(
+        "notificationSwitch"
+    ).classList.toggle(
+        "on",
+        settings.notifications
+    );
+
+    document.getElementById(
+        "soundSwitch"
+    ).classList.toggle(
+        "on",
+        settings.sound
+    );
+
+    document.getElementById(
+        "darkSwitch"
+    ).classList.toggle(
+        "on",
+        settings.dark
+    );
+
+    document.getElementById(
+        "largeTextSwitch"
+    ).classList.toggle(
+        "on",
+        settings.largeText
+    );
+}
+
+
+/* TOAST */
+
+function showToast(message) {
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+    toast.textContent = message;
+
+    toast.classList.add("show");
+
+    setTimeout(
+        () =>
+            toast.classList.remove("show"),
+        2500
+    );
+}
+
+
+/* =====================================================
+   DR. NOVA AI ASSISTANT
+===================================================== */
+
+function handleAIKey(event) {
+
+    if (event.key === "Enter") {
+        askNova();
+    }
+}
+
+
+/*
+    This is a LOCAL DEMO AI.
+
+    It does not connect to an actual AI model.
+
+    For a real AI assistant, connect this function
+    to a secure backend API rather than putting an
+    API key inside this HTML file.
+*/
+
+function askNova() {
+
+    const input =
+        document.getElementById(
+            "aiInput"
+        );
+
+    const question =
+        input.value.trim();
+
+    if (!question)
+        return;
+
+    addChatMessage(
+        question,
+        "user"
+    );
+
+    input.value = "";
+
+    setTimeout(
+        () => {
+
+            const answer =
+                getNovaResponse(
+                    question
+                );
+
+            addChatMessage(
+                answer,
+                "ai"
+            );
+
+        },
+        500
+    );
+}
+
+
+/* NOVA RESPONSE */
+
+function getNovaResponse(question) {
+
+    const q =
+        question.toLowerCase();
+
+    if (
+        q.includes("emergency") ||
+        q.includes("can't breathe") ||
+        q.includes("unconscious")
+    ) {
+
+        return `
+
+            If this may be an emergency, get a trusted
+            adult immediately and contact your local
+            emergency services. I can't assess an
+            emergency through this chat.
+
+        `;
+    }
+
+
+    if (
+        q.includes("medication") ||
+        q.includes("medicine") ||
+        q.includes("pill")
+    ) {
+
+        return `
+
+            I can explain general information about
+            medicines, but I can't prescribe medicine,
+            choose a dose, or tell you to change how
+            you take a medication.
+
+            If you have a question about a specific
+            medicine, a pharmacist, doctor, or other
+            qualified healthcare professional is the
+            right person to confirm the instructions.
+
+        `;
+    }
+
+
+    if (
+        q.includes("doctor") ||
+        q.includes("appointment")
+    ) {
+
+        return `
+
+            I can help you prepare for a doctor's
+            appointment. Try writing down:
+
+            • What you're experiencing
+            • When it started
+            • What makes it better or worse
+            • Questions you want to ask
+            • Medicines or supplements you already take
+
+            You can also use the MedSchedule History
+            section to help organize your reminder
+            information.
+
+        `;
+    }
+
+
+    if (
+        q.includes("headache") ||
+        q.includes("stomach") ||
+        q.includes("cough") ||
+        q.includes("fever")
+    ) {
+
+        return `
+
+            There can be many different reasons for
+            symptoms like this, and I can't diagnose
+            you from a chat.
+
+            If you're concerned about a symptom,
+            tell a parent, guardian, school nurse, doctor,
+            or another trusted adult who can help you
+            decide what to do next.
+
+        `;
+    }
+
+
+    if (
+        q.includes("what can you do") ||
+        q.includes("help")
+    ) {
+
+        return `
+
+            I can help with general health education,
+            explain medical words in simple language,
+            help you prepare questions for a doctor,
+            and help you organize information for an
+            appointment.
+
+            I can't diagnose conditions or prescribe or
+            change medication.
+
+        `;
+    }
+
+
+    return `
+
+        That's a good question.
+
+        I can help explain general health information
+        and help you prepare questions for a healthcare
+        professional.
+
+        I won't diagnose you or recommend changing
+        medication or doses.
+
+        If this is about something you're experiencing,
+        consider telling a trusted adult or healthcare
+        professional so they can help you properly.
+
+    `;
+}
+
+
+/* ADD CHAT MESSAGE */
+
+function addChatMessage(text, type) {
+
+    const container =
+        document.getElementById(
+            "chatMessages"
+        );
+
+    const message =
+        document.createElement(
+            "div"
+        );
+
+    message.className =
+        "message " + type;
+
+    message.innerHTML =
+        escapeHtml(text)
+        .replaceAll(
+            "\n",
+            "<br>"
+        );
+
+    container.appendChild(
+        message
+    );
+
+    container.scrollTop =
+        container.scrollHeight;
+}
+
+
+/* RENDER */
+
+function renderAll() {
+
+    populatePeopleSelects();
+
+    renderHome();
+
+    renderSchedule();
+
+    renderPeople();
+
+    renderHistory();
+
+    applySettings();
+}
+
+
+/* START */
+
+ensureDefaultPerson();
+
+renderAll();
+
+
+/* CHECK EVERY 30 SECONDS */
+
+setInterval(
+    checkReminders,
+    30000
+);
+
+
+/* UPDATE COUNTDOWN */
+
+setInterval(
+    renderHome,
+    30000
+);
+
+
+/* =====================================================
+   PWA SERVICE WORKER
+===================================================== */
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", () => {
+
+        navigator.serviceWorker
+            .register("./sw.js")
+            .then(() => {
+                console.log(
+                    "MedSchedule app is ready to install!"
+                );
+            })
+            .catch(error => {
+                console.error(
+                    "Service worker error:",
+                    error
+                );
+            });
+
+    });
+
+}
+
+</script>
+
+</body>
+</html>
